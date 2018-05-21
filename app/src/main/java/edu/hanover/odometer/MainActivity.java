@@ -22,7 +22,7 @@ public class MainActivity extends Activity {
             bound = true;
         }
         @Override
-        public void onServiceDisconected(ComponentName componentName) {
+        public void onServiceDisconnected(ComponentName componentName) {
             bound = false;
         }
     };
@@ -35,5 +35,35 @@ public class MainActivity extends Activity {
     }
 
     @Override
-    protected
+    protected void onStart() {
+        super.onStart();
+        Intent intent = new Intent(this, OdometerService.class);
+        bindService(intent, connection, Context.BIND_AUTO_CREATE);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (bound) {
+            unbindService(connection);
+            bound = false;
+        }
+    }
+
+    private void watchMileage() {
+        final TextView distanceView = (TextView)findViewById(R.id.distance);
+        final Handler handler = new Handler();
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                double distance = 0.0;
+                if (odometer != null) {
+                    distance = odometer.getMiles();
+                }
+                String distanceStr = String.format("%1$,.2f miles", distance);
+                distanceView.setText(distanceStr);
+                handler.postDelayed(this, 1000);
+            }
+        });
+    }
 }
